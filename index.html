@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AnonyBox - Constituent College BNU</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4f46e5">
+<style>
+body{font-family:Arial;background:#eef2ff;margin:0;padding:20px}
+.card{background:white;max-width:500px;margin:auto;padding:20px;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,0.1)}
+h2{color:#4f46e5;text-align:center}
+input,select,textarea{width:100%;padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:8px}
+button{width:100%;padding:14px;background:#4f46e5;color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold}
+.token{background:#dcfce7;padding:15px;border-radius:8px;margin-top:15px;display:none;text-align:center}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>🕵️ AnonyBox<br><small style="font-size:12px">Constituent College of BNU</small></h2>
+<p style="text-align:center;font-size:13px">100% Anonymous | Cloud Secured | Only HOD Can See</p>
+
+<select id="category"><option>Ragging</option><option>Harassment</option><option>Fees Issue</option><option>Faculty Issue</option><option>Infrastructure</option><option>Other</option></select>
+<select id="dept"><option>CSE</option><option>BCA</option><option>Commerce</option><option>Other</option></select>
+<textarea id="complaint" rows="5" placeholder="Type your complaint here... Your identity is hidden!"></textarea>
+<input type="text" id="contact" placeholder="Phone (Optional, if you want reply - else leave blank for anonymous)">
+<label><input type="checkbox" id="anon" checked> Submit as Fully Anonymous</label>
+<button onclick="submitComplaint()">Submit Anonymously to Cloud</button>
+
+<div id="tokenBox" class="token">
+<b>Complaint Submitted! ✅</b><br>
+Your Secret Token: <h2 id="token"></h2>
+Save this token to track status!
+</div>
+
+<p style="font-size:11px;margin-top:20px">Developed by: Jessica M (U19UC24S0004) | HOD: Divya Rani | PaaS: GitHub | Serverless: Apps Script</p>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbw8rkrthBsNZ7EW-ekdMc9RxNvbUkcPfQQc4My2yaIjdGadydf31QZHN5h8ZV8ylRlz5g/exec";
+
+async function submitComplaint(){
+ const complaint = document.getElementById('complaint').value;
+ if(!complaint){alert("Please type complaint");return;}
+ const token = "BNU-" + Math.random().toString(36).substr(2,6).toUpperCase();
+ const data = {
+   token: token,
+   category: document.getElementById('category').value,
+   complaint: complaint,
+   dept: document.getElementById('dept').value,
+   contact: document.getElementById('anon').checked ? "ANONYMOUS" : document.getElementById('contact').value
+ };
+ try{
+   await fetch(API_URL,{method:"POST",mode:"no-cors",body:JSON.stringify(data)});
+   document.getElementById('token').innerText = token;
+   document.getElementById('tokenBox').style.display="block";
+   document.getElementById('complaint').value="";
+   // offline save
+   localStorage.setItem(token, JSON.stringify(data));
+ }catch(e){
+   // offline queue
+   let pending = JSON.parse(localStorage.getItem('pendingAnony')||"[]");
+   pending.push(data);
+   localStorage.setItem('pendingAnony', JSON.stringify(pending));
+   alert("No internet! Saved offline, will sync when online. Token: "+token);
+   document.getElementById('token').innerText = token;
+   document.getElementById('tokenBox').style.display="block";
+ }
+}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
+</script>
+</body>
+</html>
